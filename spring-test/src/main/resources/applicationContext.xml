@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:context="http://www.springframework.org/schema/context"
+		xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd">
+<!--	<context:annotation-config/>-->
+	<context:component-scan base-package="com.zy"/>
+<!--	<bean id = "element" class="com.zy.Element"></bean>-->
+<!--	<bean id="user" class="com.zy.User" destroy-method="destroyMethod" autowire="byName" scope="singleton">-->
+<!--		<property name="nameList">-->
+<!--			<list>-->
+<!--				<value>nameOne</value>-->
+<!--				<value>nameTwo</value>-->
+<!--				<value>nameThreee</value>-->
+<!--			</list>-->
+<!--		</property>-->
+<!--	</bean>-->
+<!--	<bean id = "testAdvisor" class="com.zy.TestAdvisor"/>-->
+<!--	<bean id = "testAOP" class="org.springframework.aop.framework.ProxyFactoryBean">-->
+<!--		<property name="proxyInterfaces"><value>com.zy.IPlayer</value></property>-->
+<!--		<property name="interceptorNames">-->
+<!--			<list><value>testAdvisor</value></list>-->
+<!--		</property>-->
+<!--		<property name="target">-->
+<!--			<bean class="com.zy.Player"/>-->
+<!--		</property>-->
+<!--	</bean>-->
+<!--	<bean id = "testAdvisor" class="com.zy.TestAdvisor"/>-->
+<!--	<bean id = "testAOP" class="org.springframework.aop.framework.ProxyFactoryBean">-->
+<!--		<property name="proxyInterfaces"><value>com.zy.IPlayer</value></property>-->
+<!--		<property name="interceptorNames">-->
+<!--			<list><value>testAdvisor</value></list>-->
+<!--		</property>-->
+<!--		<property name="target">-->
+<!--			<bean class="com.zy.Player"/>-->
+<!--		</property>-->
+<!--	</bean>-->
+
+	<!--定义数据源-->
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+		<property
+				name="url"
+				value="jdbc:mysql://10.5.24.98:3306/test?useUnicode=true&amp;characterEncoding=UTF-8&amp;allowMultiQueries=true&amp;serverTimezone=Asia/Shanghai&amp;useSSL=false"/>
+		<property name="username" value="root"/>
+		<property name="password" value="Zhejianglab@123"/>
+	</bean>
+
+	<!--定义一个hibernate的SessionFactory-->
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="mappingResources">
+			<list>
+				<!--以下用来列出所有的PO映射文件-->
+				<value>hibernate/mapping/School.hbm.xml</value>
+			</list>
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!--    定义事务管理器，使用适用于Hibernte的事务管理器-->
+	<bean id="transactionManager"
+			class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+
+	<!--定义DAO Bean , 作为事务代理的目标-->
+	<bean id="schoolRepository" class="com.zy.SchoolRepository">
+		<!--    为DAO bean注入SessionFactory引用-->
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+
+	<!--    定义DAO bean的事务代理-->
+	<bean id="schoolDao" class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+		<!--    为事务代理bean注入事务管理器-->
+		<property name="transactionManager" ref="transactionManager"/>
+		<!--    设置事务属性-->
+		<property name="transactionAttributes">
+			<props>
+				<prop key="*">PROPAGATION_REQUIRED</prop>
+			</props>
+		</property>
+
+		<property name="target" ref="schoolRepository"/>
+	</bean>
+</beans>
